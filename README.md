@@ -43,9 +43,9 @@ Edit **data/bots/YOUR_BOT_ID/config/channel-rocketchat.json** (or create it) and
 When you make changes to any portion of your module, you need to build it and restart Botpress.
 You can type **yarn watch** which will save you some time, since every time you make a change, the source will be compiled immediately. You will only have to restart Botpress.
 
-## Useful documentation to support 
+## Useful documentation
 
-Please check the for more information
+Please check the following links for more information
 
 - [Rocket.Chat SDK](https://github.com/RocketChat/Rocket.Chat.js.SDK)
 - [Botpress SDK](https://botpress.com/reference/)
