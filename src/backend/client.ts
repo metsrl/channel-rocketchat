@@ -247,7 +247,7 @@ export class RocketChatClient {
       return next(new Error('Unsupported event type: ' + event.type))
     }
 
-    const message = {
+    const payload = {
       text: event.payload.text,
       channel: event.threadId || event.target,
       blocks
