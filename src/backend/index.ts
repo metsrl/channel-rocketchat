@@ -31,14 +31,14 @@ const onBotMount = async (bp: typeof sdk, botId: string) => {
   if (config.enabled) {
     const bot = new RocketChatClient(bp, botId, config, router)
     await bot.connect()
-    await bot.listen(bp)
+    await bot.listen()
     clients[botId] = bot
   }
   
 }
 
 // This is called every time a bot is deleted (or disabled)
-const onBotUnmount = async (botId: string) => {
+const onBotUnmount = async (bp: typeof sdk, botId: string) => {
 
   const client = clients[botId]
   if (!client) {

@@ -1,5 +1,5 @@
 import { driver, methodCache, api } from '@rocket.chat/sdk'
-import Promise from "bluebird";
+//import Promise from "bluebird";
 
 import axios from 'axios'
 import * as sdk from 'botpress/sdk'
@@ -30,6 +30,7 @@ export class RocketChatClient {
   private roomList : any
   private roomsJoined : any
   private subscribed : any
+  private connected : boolean
 
   constructor(private bp: typeof sdk, private botId: string, private config: Config, private router) {
     this.logger = bp.logger.forBot(botId)
@@ -63,7 +64,7 @@ export class RocketChatClient {
         password: this.config.rocketChatBotPassword
       });
       this.roomList = handleChannel(this.config.rocketChatRoom);
-      this.roomsJoined = await driver.joinRooms(roomList);
+      this.roomsJoined = await driver.joinRooms(this.roomList);
       console.log('joined rooms ' + this.config.rocketChatRoom);
       this.subscribed = await driver.subscribeToMessages();
       console.log('subscribed');
@@ -81,77 +82,17 @@ export class RocketChatClient {
   // listen to messages  from Rocket.Chat 
   async listen() {
     // Insert new user to db
-/*    
-    async function getOrCreateUser(message) {
-      //console.log('GETORCREATEUSER')
-      const userId = message.u._id;
-      const id = `rocketchat:${userId}`;
-      const existingUser = await bp.db
-        .get()
-        .then(knex => knex("users").where("id", id))
-        .then(users => users[0]);
-      if (existingUser) {
-        existingUser.id = userId;
-        return existingUser;
-      } else {
-        const newUser = {
-          id: id,
-          userId: userId,
-          username: message.u.username,
-          platform: "rocketchat",
-          first_name: message.u.name,
-          last_name: "",
-          gender: "",
-          timezone: null,
-          picture_url: null,
-          locale: null,
-          created_on: "",
-          number: userId
-        };
-        await bp.db.saveUser(newUser);
-        return newUser;
-      }
-    }
-*/
  
+    const that = this;
+
     const processMessages = async function(err, message, meta) {
 
-     async function getOrCreateUser2(message) {
-        //console.log('GETORCREATEUSER')
-        const userId = message.u._id;
-        const id = `rocketchat:${userId}`;
-        const existingUser = await bp.db
-          .get()
-          .then(knex => knex("users").where("id", id))
-          .then(users => users[0]);
-        if (existingUser) {
-          existingUser.id = userId;
-          return existingUser;
-        } else {
-          const newUser = {
-            id: id,
-            userId: userId,
-            username: message.u.username,
-            platform: "rocketchat",
-            first_name: message.u.name,
-            last_name: "",
-            gender: "",
-            timezone: null,
-            picture_url: null,
-            locale: null,
-            created_on: "",
-            number: userId
-          };
-          await bp.db.saveUser(newUser);
-          return newUser;
-        }
-      }
 
       // If message have .t so it's a system message, so ignore it
       if (message.t === undefined) {
 
         const userId = message.u._id;
-        const user = await bp.getOrCreateUser({channel: message.rid, userId: userId});
+        const user = await this.bp.getOrCreateUser({channel: message.rid, userId: userId});
 
         // const user = await getOrCreateUser(message);
         await this.bp.events.sendEvent(
@@ -167,21 +108,15 @@ export class RocketChatClient {
           })
         )
 
-/*
-        await bp.middlewares.sendIncoming({
-          platform: "rocketchat",
-          type: "message",
-          text: message.msg,
-          user: user,
-          channel: message.rid,
-          ts: message.ts.$date,
-          direct: false,
-          roomType: meta.roomType,
-          raw: message
-        });
-*/
         debugIncoming('Receiving message %o', message)
-
+        
+        const publicPath = await this.router.getPublicPath()
+         this.logger.info(
+            `[${this.botId}] Interactive Endpoint URL: ${publicPath.replace('BOT_ID', this.botId)}/bots/${
+              this.botId
+            }/callback`
+          )
+       
       }
     }
 
@@ -228,7 +163,7 @@ export class RocketChatClient {
 
  sendUpdateText(ts, channelId, text) {
     return Promise.fromCallback(() => {
-      driver.sendToRoomId(text, channelId, {});
+      driver.sendToRoomId(text, channelId);
     });
   }
 
@@ -247,27 +182,28 @@ export class RocketChatClient {
       return next(new Error('Unsupported event type: ' + event.type))
     }
 
+    var blocks = {};
     const payload = {
       text: event.payload.text,
-      channel: event.threadId || event.target,
-      blocks
+      channel: event.threadId || event.target
     }
 
-    debugOutgoing('Sending message %o', message)
+    debugOutgoing('Sending message %o', event.payload.text)
     await this.bp.events.sendEvent(
       this.bp.IO.Event({
         botId: this.botId,
         channel: 'rocketchat',
         direction: 'incoming',
-        payload: { ...ctx, ...payload, user_info: user },
-        type: payload.type,
+        payload: { ...payload, user_info: this.user },
+        type: messageType,
         preview: payload.text,
-        threadId: threadId && threadId.toString(),
-        target: target && target.toString()
+        target: event.target
+        //threadId: threadId && threadId.toString(),
+        //target: target && target.toString()
       })
     )
 
-    await this.sendMessage(message, event)
+    await this.sendMessage(event.payload.text, event)
  
     next(undefined, false)
 
