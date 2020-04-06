@@ -79,47 +79,6 @@ export class RocketChatClient {
   }
 
 
-/*
-
-  async processMessages(err, message, meta) {
-
-
-      // If message have .t so it's a system message, so ignore it
-      if (message.t === undefined) {
-
-        debugIncoming('Receiving message %o', message)
-        const userId = message.u._id;
-        const user = await this.bp.users.getOrCreateUser(message.rid, userId);
-        debugIncoming('User %o', user)
-
-        // const user = await getOrCreateUser(message);
-        await this.bp.events.sendEvent(
-              this.bp.IO.Event({
-                id: 'text',
-                botId: this.botId,
-                channel: 'rocketchat',
-                direction: 'incoming',
-                payload: { message, user_info: user },
-                type: "message",
-                //createdOn: message.ts.$date,
-                preview: message.msg,
-                target:this.botId
-          })
-        )
-        
-        //debugIncoming('Receiving message %o', message)
-
-      }
-   
-  }
-*/
-
-
-
-  async sendToBotpress(rocketChatMessage) {
-
-  }
-
   // listen to messages  from Rocket.Chat 
   async listen() {
     // Insert new user to db
@@ -129,34 +88,33 @@ export class RocketChatClient {
 
     const self = this
 
-    const processMessages = async function(err, message, meta) {
+    const receiveRocketChatMessages = async function(err, message, meta) {
 
+       if (!err) {
+        // If message have .t so it's a system message, so ignore it
+        if (message.t === undefined) {
 
-      // If message have .t so it's a system message, so ignore it
-      if (message.t === undefined) {
+          debugIncoming('Receiving message %o', message)
 
-        debugIncoming('Receiving message %o', message)
+          const userId = message.u._id;
+          const user = await self.bp.users.getOrCreateUser(message.rid, userId);
+          debugIncoming('User %o', user)
 
-        const userId = message.u._id;
-        const user = await self.bp.users.getOrCreateUser(message.rid, userId);
-        debugIncoming('User %o', user)
-
-        // const user = await getOrCreateUser(message);
-        await self.bp.events.sendEvent(
-              self.bp.IO.Event({
-                id: 'text',
-                botId: self.botId,
-                channel: 'rocketchat',
-                direction: 'incoming',
-                payload: { message:message, user_info: user },
-                type: "message",
-                //createdOn: message.ts.$date,
-                preview: message.msg,
-                 target:self.botId
-          })
-        )
-        
-
+          // const user = await getOrCreateUser(message);
+          await self.bp.events.sendEvent(
+                self.bp.IO.Event({
+                  id: message.ts.$date.toString(),
+                  botId: self.botId,
+                  channel: 'rocketchat',
+                  direction: 'incoming',
+                  payload: { message:message, user_info: user },
+                  type: "message",
+                  //createdOn: message.ts.$date,
+                  preview: message.msg,
+                  target:self.botId
+            })
+          )
+        }
       }
     }
 
@@ -175,7 +133,7 @@ export class RocketChatClient {
         edited: true
       };
 
-      return driver.respondToMessages(processMessages, options);
+      return driver.respondToMessages(receiveRocketChatMessages, options);
 
   }
 
@@ -189,17 +147,21 @@ export class RocketChatClient {
 
   // send message from Botpress to Rocket.Chat
   sendMessage(msg, event) {
-    const messageType = event.raw.options.roomType;
-    const channelId = event.raw.channelId;
-    const username = event.raw.options.user.username;
+    const messageType = event.payload.roomType;
+    const channelId = event.payload.channelId;
+    const username = event.payload.user.username;
     if (messageType !== undefined) {
       if (messageType == "c") {
+        console.log("Message C");
         return driver.sendToRoomId(msg, channelId);
       } else if (messageType == "p") {
+        console.log("Message P");
         return driver.sendToRoomId(msg, channelId);
       } else if (messageType == "d") {
+        console.log("Message D");
         return driver.sendDirectToUser(msg, username);
       } else if (messageType == "l") {
+        console.log("Message L");
         return driver.sendToRoomId(msg, channelId);
       } else {
         console.log("ERROR WHILE SENDING MESSAGE");
@@ -218,6 +180,7 @@ export class RocketChatClient {
   // send messages from Botpress to Rocket.Chat 
   async handleOutgoingEvent(event: sdk.IO.Event, next: sdk.IO.MiddlewareNextCallback) {
    
+    debugOutgoing('Sending event %o', event)
     if (event.type === 'typing') {
       //await this.rtm.sendTyping(event.threadId || event.target)
       await new Promise(resolve => setTimeout(() => resolve(), 1000))
@@ -225,18 +188,18 @@ export class RocketChatClient {
     }
 
     const messageType = event.type === 'default' ? 'text' : event.type
-
     if (!_.includes(outgoingTypes, messageType)) {
       return next(new Error('Unsupported event type: ' + event.type))
     }
 
-    var blocks = {};
     const payload = {
       text: event.payload.text,
       channel: event.threadId || event.target
     }
 
-    debugOutgoing('Sending message %o', event.payload.text)
+    //debugOutgoing('Sending event %o', event)
+
+    /*
     await this.bp.events.sendEvent(
       this.bp.IO.Event({
         botId: this.botId,
@@ -250,9 +213,11 @@ export class RocketChatClient {
         //target: target && target.toString()
       })
     )
+    */
 
-    await this.sendMessage(event.payload.text, event)
- 
+    //await this.sendMessage(event.payload.text, event)
+    return driver.sendToRoomId(message.msg, event.payload.rid);
+
     next(undefined, false)
 
   }
