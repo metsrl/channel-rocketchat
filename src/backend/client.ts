@@ -79,20 +79,18 @@ export class RocketChatClient {
   }
 
 
-  // listen to messages  from Rocket.Chat 
-  async listen() {
-    // Insert new user to db
- 
-    const that = this;
+/*
 
-    const processMessages = async function(err, message, meta) {
+  async processMessages(err, message, meta) {
 
 
       // If message have .t so it's a system message, so ignore it
       if (message.t === undefined) {
 
+        debugIncoming('Receiving message %o', message)
         const userId = message.u._id;
-        const user = await this.bp.getOrCreateUser({channel: message.rid, userId: userId});
+        const user = await this.bp.users.getOrCreateUser(message.rid, userId);
+        debugIncoming('User %o', user)
 
         // const user = await getOrCreateUser(message);
         await this.bp.events.sendEvent(
@@ -103,31 +101,81 @@ export class RocketChatClient {
                 direction: 'incoming',
                 payload: { message, user_info: user },
                 type: "message",
-                createdOn: message.ts.$date,
-                preview: message.msg
+                //createdOn: message.ts.$date,
+                preview: message.msg,
+                target:this.botId
           })
         )
+        
+        //debugIncoming('Receiving message %o', message)
+
+      }
+   
+  }
+*/
+
+
+
+  async sendToBotpress(rocketChatMessage) {
+
+  }
+
+  // listen to messages  from Rocket.Chat 
+  async listen() {
+    // Insert new user to db
+ 
+    //const bp = this.bp
+    //const botId = this.botId
+
+    const self = this
+
+    const processMessages = async function(err, message, meta) {
+
+
+      // If message have .t so it's a system message, so ignore it
+      if (message.t === undefined) {
 
         debugIncoming('Receiving message %o', message)
+
+        const userId = message.u._id;
+        const user = await self.bp.users.getOrCreateUser(message.rid, userId);
+        debugIncoming('User %o', user)
+
+        // const user = await getOrCreateUser(message);
+        await self.bp.events.sendEvent(
+              self.bp.IO.Event({
+                id: 'text',
+                botId: self.botId,
+                channel: 'rocketchat',
+                direction: 'incoming',
+                payload: { message:message, user_info: user },
+                type: "message",
+                //createdOn: message.ts.$date,
+                preview: message.msg,
+                 target:self.botId
+          })
+        )
         
-        const publicPath = await this.router.getPublicPath()
-         this.logger.info(
-            `[${this.botId}] Interactive Endpoint URL: ${publicPath.replace('BOT_ID', this.botId)}/bots/${
-              this.botId
-            }/callback`
-          )
-       
+
       }
     }
 
-   console.log("LISTEN TRIGGERED");
-    const options = {
-      dm: true,
-      livechat: true,
-      edited: true
-    };
 
-    return driver.respondToMessages(processMessages, options);
+    const publicPath = await this.router.getPublicPath()
+     this.logger.info(
+        `[${this.botId}] Interactive Endpoint URL: ${publicPath.replace('BOT_ID', this.botId)}/bots/${
+          this.botId
+        }/callback`
+      )
+
+     console.log("LISTEN TRIGGERED");
+      const options = {
+        dm: true,
+        livechat: true,
+        edited: true
+      };
+
+      return driver.respondToMessages(processMessages, options);
 
   }
 
