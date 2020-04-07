@@ -1,11 +1,11 @@
 import { driver, methodCache, api } from '@rocket.chat/sdk'
 //import Promise from "bluebird";
 
-import axios from 'axios'
 import * as sdk from 'botpress/sdk'
 import _ from 'lodash'
-import LRU from 'lru-cache'
-import ms from 'ms'
+//import LRU from 'lru-cache'
+//import ms from 'ms'
+//import axios from 'axios'
 
 import { Config } from '../config'
 import { Clients } from './typings'
@@ -16,7 +16,7 @@ const debugOutgoing = debug.sub('outgoing')
 
 const outgoingTypes = ['text', 'image']
 
-const userCache = new LRU({ max: 1000, maxAge: ms('1h') })
+// userCache = new LRU({ max: 1000, maxAge: ms('1h') })
 
 export class RocketChatClient {
   private interactive: any
@@ -161,6 +161,21 @@ export class RocketChatClient {
       return next(new Error('Unsupported event type: ' + event.type))
     }
 
+/*
+   const blocks = []
+    if (messageType === 'image' || messageType === 'actions') {
+      blocks.push(event.payload)
+    } else if (messageType === 'carousel') {
+      event.payload.cards.forEach(card => blocks.push(...card))
+    }
+
+    if (event.payload.quick_replies) {
+      blocks.push({ type: 'section', text: { type: 'mrkdwn', text: event.payload.text } })
+      blocks.push(event.payload.quick_replies)
+    }
+*/
+
+    // sending text
     debugOutgoing('Sending event %o', event)
     console.log("Sending event %o", event);
     await this.sendMessageToRocketChat(event)
