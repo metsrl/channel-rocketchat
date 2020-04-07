@@ -7,8 +7,8 @@ import _ from 'lodash'
 import LRU from 'lru-cache'
 import ms from 'ms'
 
-import actions from "./actions";
-import outgoing from "./outgoing";
+//import actions from "./actions";
+//import outgoing from "./outgoing";
 
 import { Config } from '../config'
 
@@ -111,7 +111,7 @@ export class RocketChatClient {
                   type: "message",
                   //createdOn: message.ts.$date,
                   preview: message.msg,
-                  target:self.botId
+                  target:message.rid
             })
           )
         }
@@ -119,14 +119,7 @@ export class RocketChatClient {
     }
 
 
-    const publicPath = await this.router.getPublicPath()
-     this.logger.info(
-        `[${this.botId}] Interactive Endpoint URL: ${publicPath.replace('BOT_ID', this.botId)}/bots/${
-          this.botId
-        }/callback`
-      )
-
-     console.log("LISTEN TRIGGERED");
+     console.log("Listening to Rocket.Chat messages ... ");
       const options = {
         dm: true,
         livechat: true,
@@ -145,21 +138,25 @@ export class RocketChatClient {
     await driver.disconnect();
   }
 
+
   // send message from Botpress to Rocket.Chat
-  sendMessage(msg, event) {
+  sendMessageToRocketChat(event) {
+    const msg = event.payload.text;
+    const channelId = event.threadId || event.target;
+    //const username = event.payload.user_info.username;
+    /*
     const messageType = event.payload.roomType;
-    const channelId = event.payload.channelId;
-    const username = event.payload.user.username;
     if (messageType !== undefined) {
       if (messageType == "c") {
         console.log("Message C");
-        return driver.sendToRoomId(msg, channelId);
+        return driver.sendToRoom(msg, channelId);
       } else if (messageType == "p") {
         console.log("Message P");
-        return driver.sendToRoomId(msg, channelId);
+        return driver.sendToRoom(msg, channelId);
       } else if (messageType == "d") {
         console.log("Message D");
-        return driver.sendDirectToUser(msg, username);
+        return driver.sendDirectToUser(msg, channelId);
+        //return driver.sendDirectToUser(msg, username);
       } else if (messageType == "l") {
         console.log("Message L");
         return driver.sendToRoomId(msg, channelId);
@@ -169,18 +166,14 @@ export class RocketChatClient {
     } else {
       console.log("MESSAGE TYPE UNDEFINED");
     }
-  }
+    */
+    return driver.sendToRoom(msg, channelId);
 
- sendUpdateText(ts, channelId, text) {
-    return Promise.fromCallback(() => {
-      driver.sendToRoomId(text, channelId);
-    });
   }
 
   // send messages from Botpress to Rocket.Chat 
   async handleOutgoingEvent(event: sdk.IO.Event, next: sdk.IO.MiddlewareNextCallback) {
    
-    debugOutgoing('Sending event %o', event)
     if (event.type === 'typing') {
       //await this.rtm.sendTyping(event.threadId || event.target)
       await new Promise(resolve => setTimeout(() => resolve(), 1000))
@@ -192,31 +185,9 @@ export class RocketChatClient {
       return next(new Error('Unsupported event type: ' + event.type))
     }
 
-    const payload = {
-      text: event.payload.text,
-      channel: event.threadId || event.target
-    }
-
-    //debugOutgoing('Sending event %o', event)
-
-    /*
-    await this.bp.events.sendEvent(
-      this.bp.IO.Event({
-        botId: this.botId,
-        channel: 'rocketchat',
-        direction: 'incoming',
-        payload: { ...payload, user_info: this.user },
-        type: messageType,
-        preview: payload.text,
-        target: event.target
-        //threadId: threadId && threadId.toString(),
-        //target: target && target.toString()
-      })
-    )
-    */
-
-    //await this.sendMessage(event.payload.text, event)
-    return driver.sendToRoomId(message.msg, event.payload.rid);
+    debugOutgoing('Sending event %o', event)
+    console.log("event %o", event);
+    await this.sendMessageToRocketChat(event)
 
     next(undefined, false)
 

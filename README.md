@@ -21,7 +21,6 @@ Edit **data/bots/YOUR_BOT_ID/config/channel-rocketchat.json** (or create it) and
 
 ## Quick Start
 
-- Open a terminal in the folder [**modules/rocket-chat**] and type **yarn && yarn build**
 - Edit your **botpress.config.json** and add the module definition so it will be loaded:
 
 ```js
@@ -36,7 +35,7 @@ Edit **data/bots/YOUR_BOT_ID/config/channel-rocketchat.json** (or create it) and
 }
 ```
 
-- Start Botpress: **yarn start**
+- Restart Botpress
 
 ## Continuous Development
 
