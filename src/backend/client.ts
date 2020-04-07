@@ -7,11 +7,7 @@ import _ from 'lodash'
 import LRU from 'lru-cache'
 import ms from 'ms'
 
-//import actions from "./actions";
-//import outgoing from "./outgoing";
-
 import { Config } from '../config'
-
 import { Clients } from './typings'
 
 const debug = DEBUG('channel-rocketchat')
@@ -39,6 +35,7 @@ export class RocketChatClient {
 
   async connect() {
 
+    this.connected = false;
     // split channe string
     function handleChannel(channelList) {
       if (channelList !== undefined) {
@@ -59,15 +56,17 @@ export class RocketChatClient {
         host: this.config.rocketChatUrl,
         useSsl: this.config.rocketChatUseSSL
       });
+      console.log('Connected to Rocket.Chat at ' + this.config.rocketChatUrl);
       this.user = await driver.login({
         username: this.config.rocketChatBotUser,
         password: this.config.rocketChatBotPassword
       });
+      console.log('Logged in Rocket.Chat as ' + this.config.rocketChatBotUser);
       this.roomList = handleChannel(this.config.rocketChatRoom);
       this.roomsJoined = await driver.joinRooms(this.roomList);
       console.log('joined rooms ' + this.config.rocketChatRoom);
       this.subscribed = await driver.subscribeToMessages();
-      console.log('subscribed');
+      console.log('subscribed to Rocket.Chat messages');
 
        for (const room of this.roomList) {
           const sent = await driver.sendToRoom( this.config.rocketChatBotUser + ' is listening ...',room);
@@ -81,46 +80,44 @@ export class RocketChatClient {
 
   // listen to messages  from Rocket.Chat 
   async listen() {
-    // Insert new user to db
- 
-    //const bp = this.bp
-    //const botId = this.botId
 
     const self = this
 
     const receiveRocketChatMessages = async function(err, message, meta) {
 
-       if (!err) {
-        // If message have .t so it's a system message, so ignore it
-        if (message.t === undefined) {
+     try {
+        if (!err) {
+          // If message have .t so it's a system message, so ignore it
+          if (message.t === undefined) {
 
-          debugIncoming('Receiving message %o', message)
+            debugIncoming('Receiving message %o', message)
 
-          const userId = message.u._id;
-          const user = await self.bp.users.getOrCreateUser(message.rid, userId);
-          debugIncoming('User %o', user)
+            const userId = message.u._id;
+            const user = await self.bp.users.getOrCreateUser(message.rid, userId);
+            debugIncoming('User %o', user)
 
-          // const user = await getOrCreateUser(message);
-          await self.bp.events.sendEvent(
-                self.bp.IO.Event({
-                  id: message.ts.$date.toString(),
-                  botId: self.botId,
-                  channel: 'rocketchat',
-                  direction: 'incoming',
-                  payload: { message:message, user_info: user },
-                  type: "message",
-                  //createdOn: message.ts.$date,
-                  preview: message.msg,
-                  target:message.rid
-            })
-          )
+            await self.bp.events.sendEvent(
+                  self.bp.IO.Event({
+                    id: message.ts.$date.toString(),
+                    botId: self.botId,
+                    channel: 'rocketchat',
+                    direction: 'incoming',
+                    payload: { message:message, user_info: user },
+                    type: "message",
+                    //createdOn: message.ts.$date,
+                    preview: message.msg,
+                    target:message.rid
+              })
+            )
+          }
         }
+      } catch (error) {
+        console.log(error);
       }
-    }
+   }
 
-
-     console.log("Listening to Rocket.Chat messages ... ");
-      const options = {
+    console.log("Listening to Rocket.Chat messages ... ");
+    const options = {
         dm: true,
         livechat: true,
         edited: true
@@ -131,11 +128,11 @@ export class RocketChatClient {
   }
 
   isConnected() {
-    return this.connected;
+      return this.connected;
   }
 
   async disconnect() {
-    await driver.disconnect();
+      await driver.disconnect();
   }
 
 
@@ -143,30 +140,9 @@ export class RocketChatClient {
   sendMessageToRocketChat(event) {
     const msg = event.payload.text;
     const channelId = event.threadId || event.target;
-    //const username = event.payload.user_info.username;
-    /*
-    const messageType = event.payload.roomType;
-    if (messageType !== undefined) {
-      if (messageType == "c") {
-        console.log("Message C");
-        return driver.sendToRoom(msg, channelId);
-      } else if (messageType == "p") {
-        console.log("Message P");
-        return driver.sendToRoom(msg, channelId);
-      } else if (messageType == "d") {
-        console.log("Message D");
-        return driver.sendDirectToUser(msg, channelId);
-        //return driver.sendDirectToUser(msg, username);
-      } else if (messageType == "l") {
-        console.log("Message L");
-        return driver.sendToRoomId(msg, channelId);
-      } else {
-        console.log("ERROR WHILE SENDING MESSAGE");
-      }
-    } else {
-      console.log("MESSAGE TYPE UNDEFINED");
-    }
-    */
+
+    // TODO - different call to fit rocketChat message type 
+
     return driver.sendToRoom(msg, channelId);
 
   }
@@ -186,7 +162,7 @@ export class RocketChatClient {
     }
 
     debugOutgoing('Sending event %o', event)
-    console.log("event %o", event);
+    console.log("Sending event %o", event);
     await this.sendMessageToRocketChat(event)
 
     next(undefined, false)
@@ -197,6 +173,7 @@ export class RocketChatClient {
 }
 
 export async function setupMiddleware(bp: typeof sdk, clients: Clients) {
+
   bp.events.registerMiddleware({
     description: 'Sends messages to Rocket.Chat',
     direction: 'outgoing',
