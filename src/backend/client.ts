@@ -3,9 +3,6 @@ import { driver, methodCache, api } from '@rocket.chat/sdk'
 
 import * as sdk from 'botpress/sdk'
 import _ from 'lodash'
-//import LRU from 'lru-cache'
-//import ms from 'ms'
-//import axios from 'axios'
 
 import { Config } from '../config'
 import { Clients } from './typings'
@@ -162,7 +159,8 @@ export class RocketChatClient {
     }
 
 /*
-   const blocks = []
+    // not supported so far
+    const blocks = []
     if (messageType === 'image' || messageType === 'actions') {
       blocks.push(event.payload)
     } else if (messageType === 'carousel') {
