@@ -99,8 +99,10 @@ export class RocketChatClient {
                     botId: self.botId,
                     channel: 'rocketchat',
                     direction: 'incoming',
-                    payload: { message:message, user_info: user },
-                    type: "message",
+                    payload: { text:message.msg, user_info: user },
+                    type: 'text',
+                    //payload: { message:message, user_info: user },
+                    //type: 'message',
                     //createdOn: message.ts.$date,
                     preview: message.msg,
                     target:message.rid
