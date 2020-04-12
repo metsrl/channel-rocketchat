@@ -4,7 +4,11 @@
   "description": "Rocket.Chat integration",
   "private": true,
   "main": "dist/backend/index.js",
-  "author": "Met srl",
+  "repository": {
+    "url": "https://github.com/bollinim/channel-rocketchat",
+    "type": "git"
+  },
+  "author": "Michele Bollini Met srl <michele.bollini@met.it>",
   "license": "AGPL-3.0-only",
   "scripts": {
     "build": "node ../../build/module-builder/bin/entry build",

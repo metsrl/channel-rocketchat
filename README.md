@@ -8,16 +8,32 @@ This is the module integration between Botpress and Rocket.Chat
 
 - Set the **externalUrl** field in botpress.config.json
 
-### Configure your bot
+## Actual limitations
 
+- Tested so far with Botpress text responses only (no tests with more complex responses like cards, carousels or buttons)
+
+### Configure your bot
+ 
 Edit **data/bots/YOUR_BOT_ID/config/channel-rocketchat.json** (or create it) and set
 - enabled: Set to true
 - rocketChatBotUser: [Rocket.Chat Bot User] 
 - rocketChatBotPassword: [Rocket.Chat Bot User Password]
-- rocketChatUrl : [RocketChat URL ex. http://localhost:3000]   
+- rocketChatUrl : [RocketChat URL ex. http://localhost:3000 or https://chat.example.com]   
 - rocketChatUseSSL: true / false
-- rocketChatRoom: [comma separated chat rooms]
+- rocketChatRoom: [comma separated chat rooms to subscribe to]
 
+```
+{
+  "$schema": "../../../assets/modules/channel-rocketchat/config.schema.json",
+  "enabled": true,
+  "rocketChatUrl": "https://chat.example.com",
+  "rocketChatUseSSL": true,  
+  "rocketChatBotUser": "techbot",
+  "rocketChatBotPassword": "techbot",
+  "rocketChatRoom": "GENERAL",
+  "scope": ""
+}
+```
 
 ## Quick Start
 
@@ -37,10 +53,6 @@ Edit **data/bots/YOUR_BOT_ID/config/channel-rocketchat.json** (or create it) and
 
 - Restart Botpress
 
-## Continuous Development
-
-When you make changes to any portion of your module, you need to build it and restart Botpress.
-You can type **yarn watch** which will save you some time, since every time you make a change, the source will be compiled immediately. You will only have to restart Botpress.
 
 ## Useful documentation
 
@@ -50,4 +62,3 @@ Please check the following links for more information
 - [Botpress SDK](https://botpress.com/reference/)
 - [How to create a Botpress module](https://botpress.com/docs/developers/create-module/)
 - [Custom module](https://botpress.com/docs/advanced/custom-module)
-

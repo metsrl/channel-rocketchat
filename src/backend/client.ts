@@ -49,24 +49,28 @@ export class RocketChatClient {
     }
 
     try {
+      // connect to Rocket.Chat server
       this.connection =  await driver.connect({
         host: this.config.rocketChatUrl,
         useSsl: this.config.rocketChatUseSSL
       });
       console.log('Connected to Rocket.Chat at ' + this.config.rocketChatUrl);
+      // login as Rocket.Chat bot user
       this.user = await driver.login({
         username: this.config.rocketChatBotUser,
         password: this.config.rocketChatBotPassword
       });
       console.log('Logged in Rocket.Chat as ' + this.config.rocketChatBotUser);
+      // join to Rocket.Chat rooms
       this.roomList = handleChannel(this.config.rocketChatRoom);
       this.roomsJoined = await driver.joinRooms(this.roomList);
       console.log('joined rooms ' + this.config.rocketChatRoom);
+      // subscribe to messages
       this.subscribed = await driver.subscribeToMessages();
       console.log('subscribed to Rocket.Chat messages');
-
+      // sent greeting message to each room
        for (const room of this.roomList) {
-          const sent = await driver.sendToRoom( this.config.rocketChatBotUser + ' is listening ...',room);
+          const sent = await driver.sendToRoom( this.config.rocketChatBotUser + ' is listening you ...',room);
       }
       this.connected = true;
     } catch (error) {
@@ -80,17 +84,17 @@ export class RocketChatClient {
 
     const self = this
 
+    // Rocket.Chat receive function
     const receiveRocketChatMessages = async function(err, message, meta) {
-
-     try {
+      try {
         if (!err) {
           // If message have .t so it's a system message, so ignore it
           if (message.t === undefined) {
 
-            debugIncoming('Receiving message %o', message)
-
             const userId = message.u._id;
             const user = await self.bp.users.getOrCreateUser(message.rid, userId);
+
+            debugIncoming('Receiving message %o', message)
             debugIncoming('User %o', user)
 
             await self.bp.events.sendEvent(
@@ -101,9 +105,6 @@ export class RocketChatClient {
                     direction: 'incoming',
                     payload: { text:message.msg, user_info: user },
                     type: 'text',
-                    //payload: { message:message, user_info: user },
-                    //type: 'message',
-                    //createdOn: message.ts.$date,
                     preview: message.msg,
                     target:message.rid
               })
@@ -113,16 +114,16 @@ export class RocketChatClient {
       } catch (error) {
         console.log(error);
       }
-   }
+    }
 
     console.log("Listening to Rocket.Chat messages ... ");
     const options = {
-        dm: true,
-        livechat: true,
-        edited: true
-      };
+      dm: true,
+      livechat: true,
+      edited: true
+    };
 
-      return driver.respondToMessages(receiveRocketChatMessages, options);
+    return driver.respondToMessages(receiveRocketChatMessages, options);
 
   }
 
@@ -130,6 +131,7 @@ export class RocketChatClient {
       return this.connected;
   }
 
+  // disconnect from Rocket.Chat
   async disconnect() {
       await driver.disconnect();
   }
@@ -160,21 +162,6 @@ export class RocketChatClient {
       return next(new Error('Unsupported event type: ' + event.type))
     }
 
-/*
-    // not supported so far
-    const blocks = []
-    if (messageType === 'image' || messageType === 'actions') {
-      blocks.push(event.payload)
-    } else if (messageType === 'carousel') {
-      event.payload.cards.forEach(card => blocks.push(...card))
-    }
-
-    if (event.payload.quick_replies) {
-      blocks.push({ type: 'section', text: { type: 'mrkdwn', text: event.payload.text } })
-      blocks.push(event.payload.quick_replies)
-    }
-*/
-
     // sending text
     debugOutgoing('Sending event %o', event)
     console.log("Sending event %o", event);
@@ -187,6 +174,8 @@ export class RocketChatClient {
 
 }
 
+
+// setup Middleware to send outgoing message from Botpress to Rochet.Chat
 export async function setupMiddleware(bp: typeof sdk, clients: Clients) {
 
   bp.events.registerMiddleware({
