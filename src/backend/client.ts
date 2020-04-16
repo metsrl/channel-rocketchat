@@ -11,7 +11,7 @@ const debug = DEBUG('channel-rocketchat')
 const debugIncoming = debug.sub('incoming')
 const debugOutgoing = debug.sub('outgoing')
 
-const outgoingTypes = ['text', 'image']
+const outgoingTypes = ['text', 'image', 'carousel', 'card']
 
 // userCache = new LRU({ max: 1000, maxAge: ms('1h') })
 
@@ -36,8 +36,9 @@ export class RocketChatClient {
     // split channe string
     function handleChannel(channelList) {
       if (channelList !== undefined) {
-        channelList = channelList.replace(/[^\w\,._]/gi, "").toLowerCase();
-        if (channelList.match(",")) {
+        //channelList = channelList.replace(/[^\w\,._]/gi, "").toLowerCase();
+        channelList = channelList.toLowerCase();
+       if (channelList.match(",")) {
           channelList = channelList.split(",");
         } else if (channelList !== "") {
           channelList = [channelList];
@@ -64,7 +65,7 @@ export class RocketChatClient {
       // join to Rocket.Chat rooms
       this.roomList = handleChannel(this.config.rocketChatRoom);
       this.roomsJoined = await driver.joinRooms(this.roomList);
-      console.log('joined rooms ' + this.config.rocketChatRoom);
+      console.log('BOT User ' + this.config.rocketChatBotUser + ' joined rooms ' + this.config.rocketChatRoom);
       // subscribe to messages
       this.subscribed = await driver.subscribeToMessages();
       console.log('subscribed to Rocket.Chat messages');
@@ -139,10 +140,71 @@ export class RocketChatClient {
 
   // send message from Botpress to Rocket.Chat
   sendMessageToRocketChat(event) {
+
+    debugOutgoing('Sending event %o', event)
+    console.log("Sending event %o", event);
+
     const msg = event.payload.text;
     const channelId = event.threadId || event.target;
+    const messageType = event.type === 'default' ? 'text' : event.type
+
+/*
+    const blocks = []
+    if (messageType === 'image' || messageType === 'actions') {
+      blocks.push(event.payload)
+    } else if (messageType === 'carousel') {
+      event.payload.cards.forEach(card => blocks.push(...card))
+    }
+   console.log("BLOCKS %o", blocks);
+*/
+
 
     // TODO - different call to fit rocketChat message type 
+/*
+    https://rocket.chat/docs/developer-guides/rest-api/chat/postmessage/
+    api.post('chat.postMessage', data[, auth, ignore])
+    
+
+    data = {
+      "alias": "Gruggy",
+      "avatar": "http://res.guggy.com/logo_128.png",
+      "channel": "#general",
+      "emoji": ":smirk:",
+      "roomId": "Xnb2kLD2Pnhdwe3RH",
+      "text": "Sample message",
+      "attachments": [
+        {
+          "audio_url": "http://www.w3schools.com/tags/horse.mp3",
+          "author_icon": "https://avatars.githubusercontent.com/u/850391?v=3",
+          "author_link": "https://rocket.chat/",
+          "author_name": "Bradley Hilton",
+          "collapsed": false,
+          "color": "#ff0000",
+          "fields": [
+            {
+              "short": true,
+              "title": "Test",
+              "value": "Testing out something or other"
+            },
+            {
+              "short": true,
+              "title": "Another Test",
+              "value": "[Link](https://google.com/) something and this and that."
+            }
+          ],
+          "image_url": "http://res.guggy.com/logo_128.png",
+          "message_link": "https://google.com",
+          "text": "Yay for gruggy!",
+          "thumb_url": "http://res.guggy.com/logo_128.png",
+          "title": "Attachment Example",
+          "title_link": "https://youtube.com",
+          "title_link_download": true,
+          "ts": "2016-12-09T16:53:06.761Z",
+          "video_url": "http://www.w3schools.com/tags/movie.mp4"
+        }
+      ]
+    }
+*/    
 
     return driver.sendToRoom(msg, channelId);
 
@@ -151,6 +213,7 @@ export class RocketChatClient {
   // send messages from Botpress to Rocket.Chat 
   async handleOutgoingEvent(event: sdk.IO.Event, next: sdk.IO.MiddlewareNextCallback) {
    
+    // sending text
     if (event.type === 'typing') {
       //await this.rtm.sendTyping(event.threadId || event.target)
       await new Promise(resolve => setTimeout(() => resolve(), 1000))
@@ -162,9 +225,6 @@ export class RocketChatClient {
       return next(new Error('Unsupported event type: ' + event.type))
     }
 
-    // sending text
-    debugOutgoing('Sending event %o', event)
-    console.log("Sending event %o", event);
     await this.sendMessageToRocketChat(event)
 
     next(undefined, false)

@@ -5,7 +5,7 @@
   "private": true,
   "main": "dist/backend/index.js",
   "repository": {
-    "url": "https://github.com/bollinim/channel-rocketchat",
+    "url": "https://github.com/metsrl/channel-rocketchat",
     "type": "git"
   },
   "author": "Michele Bollini Met srl <michele.bollini@met.it>",
