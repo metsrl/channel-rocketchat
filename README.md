@@ -12,6 +12,22 @@ This is the module integration between Botpress and Rocket.Chat
 
 - Tested so far with Botpress text responses only (no tests with more complex responses like cards, carousels or buttons)
 
+## Quick Start
+
+- Edit your **botpress.config.json** and add the module definition so it will be loaded:
+
+```js
+{
+  ...
+  "modules": [
+    ...
+    {
+      "location": "MODULES_ROOT/channel-rocketchat",
+      "enabled": true
+    },
+}
+```
+
 ### Configure your bot
  
 Edit **data/bots/YOUR_BOT_ID/config/channel-rocketchat.json** (or create it) and set
@@ -28,28 +44,14 @@ Edit **data/bots/YOUR_BOT_ID/config/channel-rocketchat.json** (or create it) and
   "enabled": true,
   "rocketChatUrl": "https://chat.example.com",
   "rocketChatUseSSL": true,  
-  "rocketChatBotUser": "techbot",
-  "rocketChatBotPassword": "techbot",
+  "rocketChatBotUser": "rocketChatBotUsername",
+  "rocketChatBotPassword": "rocketChatBotUserPassword",
   "rocketChatRoom": "GENERAL",
   "scope": ""
 }
 ```
 
-## Quick Start
 
-- Edit your **botpress.config.json** and add the module definition so it will be loaded:
-
-```js
-{
-  ...
-  "modules": [
-    ...
-    {
-      "location": "MODULES_ROOT/channel-rocketchat",
-      "enabled": true
-    },
-}
-```
 
 - Restart Botpress
 

@@ -16,7 +16,7 @@
     "package": "node ../../build/module-builder/bin/entry package"
   },
   "dependencies": {
-   "@rocket.chat/sdk": "^0.2.9"
+   "@rocket.chat/sdk": ">=0.2.9"
   },
   "engines": {
     "node": "> 8.0.0",
