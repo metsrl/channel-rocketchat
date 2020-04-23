@@ -11,7 +11,18 @@ This is the module integration between Botpress and Rocket.Chat
 ## Actual limitations
 
 - Tested so far with Botpress text responses only (no tests with more complex responses like cards, carousels or buttons)
-- THIS IS THE SOURCE CODE AND SHOUD BE COMPILE AND PACKAGED WITH YARN BUILD && YARN PACKAGE COMMANDS. Actually there is an issue while we try to package the module with the yarn package command (under Linux-like environments like Ubuntu or MacOSX, it works under Windows OS). 
+- THIS IS THE MODULE SOURCE CODE AND SHOUD BE COMPILE AND PACKAGED WITH YARN BUILD && YARN PACKAGE COMMANDS. Actually there is an issue while we try to package the module with the yarn package command (under Linux-like environments like Ubuntu or MacOSX, it works under Windows OS). 
+- To set up a development environment
+    -  download [BP source code](https://github.com/botpress/botpress) and unzip it
+    -  from the unzipped folder launch 
+        - yarn
+        - yarn build
+    - put this source code under folder **module/channel-rocketchat**
+    - go to **modules/channel-rocketchat folder** and launch 
+        - yarn
+        - yarn build
+        - yarn package
+    - if the yarn package carry out successfully you can move the package _channel-rocketchat.tgz_ under **modules** folder into the BP binary installation
 
 ## Quick Start
 
