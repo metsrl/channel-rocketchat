@@ -11,7 +11,7 @@ This is the module integration between Botpress and Rocket.Chat
 ## Actual limitations
 
 - Tested so far with Botpress text responses only (no tests with more complex responses like cards, carousels or buttons)
-- THIS THE SOURCE CODE AND SHOUD BE COMPILE AND PACKAGED WITH YARN BUILD && YARN PACKAGE COMMANDS. Actually there is an issue while we're trying to package the module with the yarn package command (under Linux-like environments like Ubuntu or MacOSX, it work under Windows OS). 
+- THIS IS THE SOURCE CODE AND SHOUD BE COMPILE AND PACKAGED WITH YARN BUILD && YARN PACKAGE COMMANDS. Actually there is an issue while we try to package the module with the yarn package command (under Linux-like environments like Ubuntu or MacOSX, it works under Windows OS). 
 
 ## Quick Start
 
