@@ -11,5 +11,5 @@ WORKDIR /bp
 COPY . /bp/modules/channel-rocketchat
 RUN yarn && \
     yarn build && \ 
-    rm -fR /bp/modules/channel-rocketchat/node_production_modules/asteroid/test && \
+    rm -fR "/usr/local/share/.cache/yarn/v6/npm-asteroid*/node_modules/asteroid/test" && \
     yarn package
