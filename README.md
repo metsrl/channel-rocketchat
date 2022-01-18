@@ -29,7 +29,7 @@ This is the module integration between Botpress and Rocket.Chat
 git clone https://github.com/metsrl/channel-rocketchat.git
 cd channel-rocketchat
 docker build -t channel --no-cache .
-docker run -v "$(pwd)":/out --rm channel bash -c "cp /bp/out/binaries/modules/channel-rocketchat.tgz /out/"
+docker run -v "$(pwd)":/out --rm channel bash -c "cp /bp/packages/bp/binaries/modules/channel-rocketchat.tgz /out/"
 echo && echo "There you go:" && ls -lh channel-rocketchat.tgz
 ```
 Then, put the *channel-rocketchat.tgz* inside your production "<BP_ROOT>/modules" and restart you BP. 
